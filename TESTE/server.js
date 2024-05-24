@@ -163,7 +163,7 @@ app.get("/logout", function (req, res, next) {
       return next(err);
     }
     res.redirect("/");
-    res.session.destroy();
+    req.session.destroy();
   });
 });
 
