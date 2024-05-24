@@ -1,26 +1,34 @@
 "use strict";
 /* global require */
+require("dotenv").config(); // Load environment variables at the top
 const express = require("express");
 const session = require("express-session");
 const http = require("http");
 const passport = require("passport");
 const axios = require("axios");
-const bodyParser = require("body-parser"); // Adicionar o body-parser
+const bodyParser = require("body-parser");
 
 require("./auth");
-require("dotenv").config();
 
 const app = express();
 
-app.use(session({ secret: "Oauth" }));
+app.use(session({ 
+  secret: "Oauth", 
+  resave: false, 
+  saveUninitialized: false 
+}));
+console.log('Session middleware initialized.');
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(express.static("public")); // Servir arquivos estáticos da pasta "public"
-app.use(bodyParser.json()); // Analisar corpo das requisições como JSON
+app.use(bodyParser.json());
+
+// Serve static files with a route prefix to avoid conflicts
+app.use('/public', express.static('public'));
 
 let ledState = "OFF";
 const data = [];
 let lastValue = 0;
+
 const credentials = [
   {
     username: process.env.USER1_username,
@@ -36,7 +44,7 @@ const server = http.createServer(app);
 const io = require("socket.io")(server);
 const mqtt = require("mqtt");
 
-let mqttClient; // Declarar o mqttClient como uma variável global
+let mqttClient;
 
 const MQTT_USERNAME = "Pedro";
 const MQTT_PASSWORD = "test";
@@ -64,7 +72,6 @@ async function getWeather() {
   }
 }
 
-// Function to send weather data to clients
 async function sendWeatherData() {
   const weatherData = await getWeather();
   if (weatherData) {
@@ -84,6 +91,7 @@ function connectToMqttBroker(mqttBroker, mqttPort) {
     mqttClient.subscribe("test", function (err) {
       if (err) {
         console.error("Error subscribing to MQTT topic:", err);
+        res.status(500).json({ connected: false, error: "Failed to connect to MQTT broker" });
       }
     });
   });
@@ -106,7 +114,6 @@ function connectToMqttBroker(mqttBroker, mqttPort) {
 io.on("connection", (socket) => {
   console.log("A user connected");
 
-  // Send weather data to newly connected clients
   sendWeatherData();
   socket.emit("data", data);
   socket.emit("mqttData", { moistureValue: lastValue });
@@ -116,13 +123,19 @@ io.on("connection", (socket) => {
   });
 });
 
-function isLoggedIn(req, res, next) {
-  if (req.user) {
-    next();
-  } else {
-    res.sendFile(__dirname + "/public/unauthorized.html");
+function ensureAuthenticated(req, res, next) {
+  console.log('ensureAuthenticated middleware called');
+  console.log('User authenticated:', req.isAuthenticated());
+
+  if (req.isAuthenticated()) {
+    return next();
   }
+  console.log('User not authenticated, redirecting to login page');
+  /*res.redirect('/');*/
+  return res.sendFile(__dirname + "/public/unauthorized.html");
 }
+
+
 
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/public/index.html");
@@ -134,7 +147,7 @@ app.get("/auth/google", (req, res) => {
 
 app.get("/auth/google/callback", (req, res) => {
   passport.authenticate("google", {
-    successRedirect: "/connectmqtt.html", // Redirecionar para connectmqtt.html após login bem-sucedido
+    successRedirect: "/connectmqtt.html",
     failureRedirect: "/auth/failure",
   })(req, res, () => {
     res.redirect("/dashboard.html");
@@ -145,15 +158,17 @@ app.get("/auth/failure", (req, res) => {
   res.sendFile(__dirname + "/public/failure.html");
 });
 
-app.get("/connectmqtt.html", isLoggedIn, (req, res) => {
-  res.sendFile(__dirname + "/public/connectmqtt.html");
-});
-
-app.get("/dashboard.html", isLoggedIn, (req, res) => {
+// Place the protected routes after the middleware setup
+app.get("/dashboard.html", ensureAuthenticated, (req, res) => {
+  console.log("DASHBOARD");
   res.sendFile(__dirname + "/public/dashboard.html");
 });
 
-app.get("/about.html", isLoggedIn, (req, res) => {
+app.get("/connectmqtt.html", ensureAuthenticated, (req, res) => {
+  res.sendFile(__dirname + "/public/connectmqtt.html");
+});
+
+app.get("/about.html", ensureAuthenticated, (req, res) => {
   res.sendFile(__dirname + "/public/about.html");
 });
 
@@ -184,6 +199,7 @@ app.get("/api/moisture", (req, res) => {
 });
 
 app.get("/api/ledState", (req, res) => {
+  console.log("LEDSTATE");
   if (req.isAuthenticated()) {
     res.json({ ledState });
   } else {
@@ -206,11 +222,9 @@ app.post("/connect-mqtt", async (req, res) => {
 
   try {
     connectToMqttBroker(mqttBroker, mqttPort);
-    // Respond with success
     res.json({ connected: true });
   } catch (error) {
     console.error("Error connecting to MQTT broker:", error);
-    // Respond with failure
     res.status(500).json({ connected: false, error: "Failed to connect to MQTT broker" });
   }
 });

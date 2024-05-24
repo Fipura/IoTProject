@@ -99,10 +99,10 @@
           const data = await response.json();
 
           if (data.connected) {
-            // Redirecionar para o dashboard.html
+            // Redirect to the dashboard only if the connection was successful
             window.location.href = "/dashboard.html";
           } else {
-            // Exibir mensagem de erro
+            // Display error message if the connection failed
             messageDiv.textContent = "Failed to connect to MQTT broker";
           }
         } catch (error) {
