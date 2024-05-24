@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+    />
+    <style>
+      .chart-container {
+        position: relative;
+        height: 400px;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f5f5f5; /* Fundo cinza claro */
+      }
+
+      .navbar {
+        background: linear-gradient(
+          90deg,
+          #7aa892,
+          #a6c9aa
+        ); /* Degradê de verdes suaves */
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .card {
+        background-color: #ffffff; /* Cartões brancos */
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .btn-primary {
+        background: linear-gradient(
+          90deg,
+          #7aa892,
+          #a6c9aa
+        ); /* Degradê de verdes suaves para botões */
+        border: none;
+        transition: all 0.3s ease;
+        color: #ffffff; /* Texto branco nos botões */
+      }
+
+      .btn-primary:hover {
+        background: linear-gradient(
+          90deg,
+          #a6c9aa,
+          #7aa892
+        ); /* Inverte o degradê ao passar o mouse */
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        color: #4d4d4d; /* Títulos em cinza escuro */
+      }
+
+      p,
+      span,
+      a {
+        color: #6d6d6d; /* Texto em cinza mais claro */
+      }
+    </style>
+  </head>
+
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+      <div class="container">
+        <a class="navbar-brand" href="dashboard.html">Dashboard</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-toggle="collapse"
+          data-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="dashboard.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="about.html">About</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/logout">Logout</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="row mb-4">
+        <div class="col-md-12 d-flex justify-content-center">
+          <h5>
+            Bem vindo ao dashboard, <span id="user-display-name">User</span>!
+          </h5>
+        </div>
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="fas fa-tint mr-2"></i>Moisture
+              </h5>
+              <p class="card-text"><span id="moisture-value">-</span>%</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="fas fa-cloud-sun mr-2"></i>Weather
+              </h5>
+              <h6 class="card-subtitle mb-2 text-muted">
+                Tempo Tomar, Portugal
+              </h6>
+              <p class="card-text" id="weather-info">Loading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div class="card">
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas id="myChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row mt-4">
+        <div class="col">
+          <button id="toggleLedBtn" class="btn btn-primary">
+            <i class="fas fa-lightbulb mr-2"></i>Toggle LED
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+      const socket = io();
+
+      fetch("/api/user")
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.displayName) {
+            document.getElementById("user-display-name").textContent =
+              data.displayName;
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching user data:", error);
+        });
+
+      socket.on("mqttData", (data) => {
+        const moistureValue = parseFloat(data.moistureValue).toFixed(2);
+        document.getElementById("moisture-value").textContent = moistureValue;
+      });
+
+      socket.on("weatherData", (data) => {
+        const weatherInfo = data.data.current_condition[0];
+        const weatherDescription = weatherInfo.weatherDesc[0].value;
+        const temperature = weatherInfo.temp_C;
+        const humidity = weatherInfo.humidity;
+        const weatherText = `Weather: ${weatherDescription}, Temperature: ${temperature}°C, Humidity: ${humidity}%`;
+        document.getElementById("weather-info").textContent = weatherText;
+      });
+
+      let myChart;
+      socket.on("data", (data) => {
+        const ctx = document.getElementById("myChart").getContext("2d");
+        if (!myChart) {
+          myChart = new Chart(ctx, {
+            type: "line",
+            data: {
+              labels: data.map((_, i) => i + 1),
+              datasets: [
+                {
+                  label: "Humidity",
+                  data: data,
+                  borderColor: "rgb(75, 192, 192)",
+                  tension: 0.1,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                },
+              },
+            },
+          });
+        } else {
+          myChart.data.labels = data.map((_, i) => i + 1);
+          myChart.data.datasets[0].data = data;
+          myChart.update();
+        }
+      });
+      document.getElementById("toggleLedBtn").addEventListener("click", () => {
+        // Call the API endpoint to toggle the LED
+        fetch("/api/led", {
+          method: "POST",
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data); // Log the response from the server
+            // You can perform any additional actions here if needed
+          })
+          .catch((error) => {
+            console.error("Error toggling LED:", error); // Log any errors
+          });
+      });
+    </script>
+  </body>
+</html>
