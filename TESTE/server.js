@@ -80,34 +80,45 @@ async function sendWeatherData() {
 }
 
 function connectToMqttBroker(mqttBroker, mqttPort) {
-  mqttClient = mqtt.connect(`mqtt://${mqttBroker}`, {
-    port: mqttPort,
-    username: MQTT_USERNAME,
-    password: MQTT_PASSWORD,
-  });
+  return new Promise((resolve, reject) => {
+    mqttClient = mqtt.connect(`mqtt://${mqttBroker}`, {
+      port: mqttPort,
+      username: MQTT_USERNAME,
+      password: MQTT_PASSWORD,
+      reconnect: false
+    });
 
-  mqttClient.on("connect", function () {
-    console.log("Connected to MQTT broker");
-    mqttClient.subscribe("test", function (err) {
-      if (err) {
-        console.error("Error subscribing to MQTT topic:", err);
-        res.status(500).json({ connected: false, error: "Failed to connect to MQTT broker" });
+    mqttClient.on("connect", () => {
+      console.log("Connected to MQTT broker");
+      mqttClient.subscribe("test", (err) => {
+        if (err) {
+          console.error("Error subscribing to MQTT topic:", err);
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
+
+    mqttClient.on("error", (err) => {
+      console.error("MQTT connection error:", err);
+      reject(err);
+      mqttClient.end();
+    });
+
+    mqttClient.on("message", function (topic, message) {
+      console.log("Received message:", message.toString());
+      const parts = message.toString().split("%");
+      const moistureValue = parseFloat(parts[0]);
+      if (!isNaN(moistureValue)) {
+        lastValue = moistureValue;
+        data.push(moistureValue);
+        console.log("moistureValue:", moistureValue);
+        ledState = parts[1];
+        io.emit("data", data);
+        io.emit("mqttData", { moistureValue });
       }
     });
-  });
-
-  mqttClient.on("message", function (topic, message) {
-    console.log("Received message:", message.toString());
-    const parts = message.toString().split("%");
-    const moistureValue = parseFloat(parts[0]);
-    if (!isNaN(moistureValue)) {
-      lastValue = moistureValue;
-      data.push(moistureValue);
-      console.log("moistureValue:", moistureValue);
-      ledState = parts[1];
-      io.emit("data", data);
-      io.emit("mqttData", { moistureValue });
-    }
   });
 }
 
@@ -179,6 +190,11 @@ app.get("/logout", function (req, res, next) {
     }
     res.redirect("/");
     req.session.destroy();
+    if(mqttClient){
+      console.log("Closing MQTT connection");
+      mqttClient.end();
+      mqttClient = null;
+    }
   });
 });
 
@@ -221,7 +237,7 @@ app.post("/connect-mqtt", async (req, res) => {
   const { mqttBroker, mqttPort } = req.body;
 
   try {
-    connectToMqttBroker(mqttBroker, mqttPort);
+    await connectToMqttBroker(mqttBroker, mqttPort);
     res.json({ connected: true });
   } catch (error) {
     console.error("Error connecting to MQTT broker:", error);
