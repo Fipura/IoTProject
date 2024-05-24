@@ -12,6 +12,8 @@ require("./auth");
 
 const app = express();
 
+let isConnectedToMqtt = false;
+
 app.use(session({ 
   secret: "Oauth", 
   resave: false, 
@@ -95,6 +97,7 @@ function connectToMqttBroker(mqttBroker, mqttPort) {
           console.error("Error subscribing to MQTT topic:", err);
           reject(err);
         } else {
+          isConnectedToMqtt = true;
           resolve();
         }
       });
@@ -135,9 +138,6 @@ io.on("connection", (socket) => {
 });
 
 function ensureAuthenticated(req, res, next) {
-  console.log('ensureAuthenticated middleware called');
-  console.log('User authenticated:', req.isAuthenticated());
-
   if (req.isAuthenticated()) {
     return next();
   }
@@ -146,6 +146,12 @@ function ensureAuthenticated(req, res, next) {
   return res.sendFile(__dirname + "/public/unauthorized.html");
 }
 
+function ensureConnection(req, res, next) {
+  if (isConnectedToMqtt) {
+    return next();
+  }
+  return res.sendFile(__dirname + "/public/connectmqtt.html");
+}
 
 
 app.get("/", (req, res) => {
@@ -170,7 +176,7 @@ app.get("/auth/failure", (req, res) => {
 });
 
 // Place the protected routes after the middleware setup
-app.get("/dashboard.html", ensureAuthenticated, (req, res) => {
+app.get("/dashboard.html", ensureAuthenticated, ensureConnection, (req, res) => {
   console.log("DASHBOARD");
   res.sendFile(__dirname + "/public/dashboard.html");
 });
@@ -179,7 +185,7 @@ app.get("/connectmqtt.html", ensureAuthenticated, (req, res) => {
   res.sendFile(__dirname + "/public/connectmqtt.html");
 });
 
-app.get("/about.html", ensureAuthenticated, (req, res) => {
+app.get("/about.html", ensureAuthenticated, ensureConnection, (req, res) => {
   res.sendFile(__dirname + "/public/about.html");
 });
 
