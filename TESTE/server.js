@@ -111,15 +111,25 @@ function connectToMqttBroker(mqttBroker, mqttPort) {
 
     mqttClient.on("message", function (topic, message) {
       console.log("Received message:", message.toString());
-      const parts = message.toString().split("%");
-      const moistureValue = parseFloat(parts[0]);
-      if (!isNaN(moistureValue)) {
-        lastValue = moistureValue;
-        data.push(moistureValue);
-        console.log("moistureValue:", moistureValue);
-        ledState = parts[1];
+      const parts = message.toString().split("/");
+      const temperature = parseFloat(parts[0]);
+      const humidity = parseFloat(parts[1]);
+      const pressure = parseFloat(parts[2]);
+      const ledState = parts[3];
+
+      if (!isNaN(temperature) && !isNaN(humidity) && !isNaN(pressure)) {
+        lastValue = temperature; // Update lastValue to temperature
+        data.push([humidity, temperature, pressure]); // Push an array with humidity, temperature, and pressure
+        console.log(
+          "Temperature:",
+          temperature,
+          "Humidity:",
+          humidity,
+          "Pressure:",
+          pressure
+        );
         io.emit("data", data);
-        io.emit("mqttData", { moistureValue });
+        io.emit("mqttData", { temperature, humidity, pressure, ledState });
       }
     });
   });
