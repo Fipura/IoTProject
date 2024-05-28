@@ -228,9 +228,9 @@ app.get("/api/user", (req, res) => {
   }
 });
 
-app.get("/api/moisture", (req, res) => {
+app.get("/api/humidity", (req, res) => {
   if (req.isAuthenticated()) {
-    res.json({ moisture: lastValuehum });
+    res.json({ humidity: lastValuehum });
   } else {
     return res.sendFile(__dirname + "/public/unauthorized.html");
   }
