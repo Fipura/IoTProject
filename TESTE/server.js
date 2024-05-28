@@ -29,7 +29,9 @@ app.use('/public', express.static('public'));
 
 let ledState = "OFF";
 const data = [];
-let lastValue = 0;
+let lastValuetemp = 0;
+let lastValuehum = 0;
+let lastValuepress = 0;
 
 const credentials = [
   {
@@ -118,7 +120,9 @@ function connectToMqttBroker(mqttBroker, mqttPort) {
       const ledState = parts[3];
 
       if (!isNaN(temperature) && !isNaN(humidity) && !isNaN(pressure)) {
-        lastValue = temperature; // Update lastValue to temperature
+        lastValuetemp = temperature; // Update lastValue to temperature
+        lastValuehum = humidity; // Update lastValue to temperature
+        lastValuepress = pressure; // Update lastValue to temperature
         data.push([humidity, temperature, pressure]); // Push an array with humidity, temperature, and pressure
         console.log(
           "Temperature:",
@@ -140,7 +144,9 @@ io.on("connection", (socket) => {
 
   sendWeatherData();
   socket.emit("data", data);
-  socket.emit("mqttData", { moistureValue: lastValue });
+  socket.emit("mqttData", { moistureValue: lastValuehum });
+  socket.emit("mqttData", { temperatureValue: lastValuetemp });
+  socket.emit("mqttData", { pressureValue: lastValuepress });
 
   socket.on("disconnect", () => {
     console.log("User disconnected");
@@ -224,7 +230,23 @@ app.get("/api/user", (req, res) => {
 
 app.get("/api/moisture", (req, res) => {
   if (req.isAuthenticated()) {
-    res.json({ moisture: lastValue });
+    res.json({ moisture: lastValuehum });
+  } else {
+    return res.sendFile(__dirname + "/public/unauthorized.html");
+  }
+});
+
+app.get("/api/temperature", (req, res) => {
+  if (req.isAuthenticated()) {
+    res.json({ temperature: lastValuetemp });
+  } else {
+    return res.sendFile(__dirname + "/public/unauthorized.html");
+  }
+});
+
+app.get("/api/pressure", (req, res) => {
+  if (req.isAuthenticated()) {
+    res.json({ pressure: lastValuepress });
   } else {
     return res.sendFile(__dirname + "/public/unauthorized.html");
   }
