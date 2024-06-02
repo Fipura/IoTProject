@@ -29,7 +29,7 @@ if wlan is None:
 print("WiFi Connected")
 
 # Configurações do servidor MQTT
-mqtt_server = '5.tcp.eu.ngrok.io'
+mqtt_server = '0.tcp.eu.ngrok.io'
 client_id = 'teste'
 topic_pub = b'test'
 led_state = "OFF"
@@ -48,7 +48,7 @@ def mqtt_callback(topic, msg):
 
 # Função para conectar ao servidor MQTT
 def mqtt_connect():
-    client = MQTTClient(client_id, mqtt_server, port=10870, user="Pedro", password="test", keepalive=3600)
+    client = MQTTClient(client_id, mqtt_server, port=10916, user="Pedro", password="test", keepalive=3600)
     client.set_callback(mqtt_callback)  # Define a função de callback para mensagens MQTT
     client.set_last_will("test", "Disconnected")  # Define a mensagem de última vontade
     client.connect()  # Conecta ao servidor MQTT
