@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+    />
+    <style>
+      body {
+        font-family: "Roboto", sans-serif;
+        background-color: #f8f9fa;
+      }
+
+      .navbar {
+        background: linear-gradient(90deg, #7aa892, #a6c9aa);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .card {
+        background-color: #ffffff;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        height: 100%;
+      }
+
+      .btn-primary {
+        background: linear-gradient(90deg, #7aa892, #a6c9aa);
+        border: none;
+        transition: all 0.3s ease;
+        color: #ffffff;
+      }
+
+      .btn-primary:hover {
+        background: linear-gradient(90deg, #a6c9aa, #7aa892);
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        color: #4d4d4d;
+      }
+
+      p,
+      span,
+      a {
+        color: #6d6d6d;
+      }
+
+      .chart-container {
+        height: 300px;
+      }
+
+      .card-body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .card-title {
+        text-align: center;
+      }
+
+      .card-subtitle,
+      .card-text {
+        text-align: center;
+      }
+
+      .row-equal-height {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      .row-equal-height > [class*='col-'] {
+        display: flex;
+        flex-direction: column;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+      <div class="container">
+        <a class="navbar-brand" href="dashboard.html">Dashboard</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-toggle="collapse"
+          data-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="dashboard.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="about.html">About</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/logout" id="logoutBtn">Logout</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="row mb-4">
+        <div class="col-md-12 d-flex justify-content-center">
+          <h5>
+            Welcome to the dashboard, <span id="user-display-name">User</span>!
+          </h5>
+        </div>
+      </div>
+      <div class="row mb-4">
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="fas fa-thermometer-half mr-2"></i>Temperature
+              </h5>
+              <p class="card-text" id="temperature-value">- ºC</p>
+              <div class="chart-container">
+                <canvas id="temperatureChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="fas fa-tachometer-alt mr-2"></i>Pressure
+              </h5>
+              <p class="card-text" id="pressure-value">- hPa</p>
+              <div class="chart-container">
+                <canvas id="pressureChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="fas fa-water mr-2"></i>Humidity
+              </h5>
+              <p class="card-text" id="humidity-value">- %</p>
+              <div class="chart-container">
+                <canvas id="humidityChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row mb-4 row-equal-height">
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="fas fa-cloud-sun mr-2"></i>Weather
+              </h5>
+              <h6 class="card-subtitle mb-2 text-muted">
+                Weather in Tomar, Portugal
+              </h6>
+              <p class="card-text" id="weather-info">Loading...</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="fas fa-lightbulb mr-2"></i>Control the LED
+              </h5>
+              <button id="toggleLedBtn" class="btn btn-primary">
+                <i class="fas fa-lightbulb mr-2"></i>Toggle LED
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="fas fa-lightbulb mr-2"></i>Current LED State
+              </h5>
+              <h6 id="ledBtnh6" class="card-subtitle mt-2 text-muted">
+                Loading...
+              </h6>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+      const socket = io();
+
+      fetch("/api/user")
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.displayName) {
+            document.getElementById("user-display-name").textContent =
+              data.displayName;
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching user data:", error);
+        });
+
+      let temperatureChart, humidityChart, pressureChart;
+      let temperatureData = [],
+        humidityData = [],
+        pressureData = [];
+
+      const temperatureChartCtx = document.getElementById("temperatureChart");
+      const humidityChartCtx = document.getElementById("humidityChart");
+      const pressureChartCtx = document.getElementById("pressureChart");
+
+      function createChart(ctx, data, label, color) {
+        return new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: Array.from({ length: data.length }, (_, i) => i + 1),
+            datasets: [
+              {
+                label: label,
+                data: data,
+                borderColor: color,
+                tension: 0.1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                min:
+                  label === "Temperature" ? 10 : label === "Humidity" ? 0 : 950,
+                max:
+                  label === "Temperature"
+                    ? 50
+                    : label === "Humidity"
+                    ? 100
+                    : 1050,
+              },
+            },
+          },
+        });
+      }
+
+      function updateChart(chart, data, value) {
+        chart.data.labels.push(chart.data.labels.length + 1);
+        chart.data.datasets[0].data.push(value);
+        chart.data.datasets[0].data.shift();
+        chart.update();
+      }
+
+      socket.on("connect", () => {
+        temperatureChart = createChart(
+          temperatureChartCtx,
+          temperatureData,
+          "Temperature",
+          "rgb(192, 75, 75)"
+        );
+        humidityChart = createChart(
+          humidityChartCtx,
+          humidityData,
+          "Humidity",
+          "rgb(75, 192, 192)"
+        );
+        pressureChart = createChart(
+          pressureChartCtx,
+          pressureData,
+          "Pressure",
+          "rgb(75, 75, 192)"
+        );
+      });
+
+      socket.on("mqttData", (data) => {
+        const { temperature, humidity, pressure } = data;
+
+        // Display the data
+        document.getElementById("temperature-value").textContent =
+          temperature.toFixed(2) + " °C";
+        document.getElementById("humidity-value").textContent =
+          humidity.toFixed(2) + " %";
+        document.getElementById("pressure-value").textContent =
+          pressure.toFixed(2) + " hPa";
+
+        // Save the data to local storage
+        localStorage.setItem("temperature", temperature.toFixed(2));
+        localStorage.setItem("humidity", humidity.toFixed(2));
+        localStorage.setItem("pressure", pressure.toFixed(2));
+
+        // Update the chart data arrays and save them to local storage
+        temperatureData.push(temperature);
+        humidityData.push(humidity);
+        pressureData.push(pressure);
+
+        localStorage.setItem(
+          "temperatureData",
+          JSON.stringify(temperatureData)
+        );
+        localStorage.setItem("humidityData", JSON.stringify(humidityData));
+        localStorage.setItem("pressureData", JSON.stringify(pressureData));
+
+        // Update the charts
+        if (temperatureChart) {
+          updateChart(temperatureChart, temperatureData, temperature);
+          updateChart(humidityChart, humidityData, humidity);
+          updateChart(pressureChart, pressureData, pressure);
+        }
+      });
+
+      socket.on("weatherData", (data) => {
+        const weatherInfo = data.data.current_condition[0];
+        const weatherDescription = weatherInfo.weatherDesc[0].value;
+        const temperature = weatherInfo.temp_C;
+        const humidity = weatherInfo.humidity;
+        const weatherText = `Weather: ${weatherDescription}, Temperature: ${temperature}°C, Humidity: ${humidity}%`;
+        document.getElementById("weather-info").textContent = weatherText;
+      });
+
+      document.getElementById("toggleLedBtn").addEventListener("click", () => {
+        fetch("/api/led", { method: "POST" })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data);
+          })
+          .catch((error) => {
+            console.error("Error toggling LED:", error);
+          });
+        fetch("/api/ledstate")
+          .then((response) => response.json())
+          .then((data) => {
+            const ledState = data.ledState;
+            const ledStateElement = document.getElementById("ledBtnh6");
+            ledStateElement.textContent = `The LED is ${ledState}`;
+          })
+          .catch((error) => {
+            console.error("Error fetching LED state:", error);
+          });
+      });
+
+      fetch("/api/ledstate")
+            .then((response) => response.json())
+            .then((data) => {
+                const ledState = data.ledState;
+                const ledStateElement = document.getElementById("ledBtnh6");
+                ledStateElement.textContent = `The LED is ${ledState}`;
+            })
+            .catch((error) => {
+                console.error("Error fetching LED state:", error);
+            });
+
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        console.log("A apagar o storage.");
+        clearLocalStorage();
+        // Redirect to login page or perform other logout operations
+        window.location.href = "/logout";
+      });
+
+      function clearLocalStorage() {
+        localStorage.removeItem("temperature");
+        localStorage.removeItem("humidity");
+        localStorage.removeItem("pressure");
+        localStorage.removeItem("temperatureData");
+        localStorage.removeItem("humidityData");
+        localStorage.removeItem("pressureData");
+      }
+
+      window.addEventListener("load", () => {
+        const savedTemperature = localStorage.getItem("temperature");
+        const savedHumidity = localStorage.getItem("humidity");
+        const savedPressure = localStorage.getItem("pressure");
+
+        if (savedTemperature !== null) {
+          document.getElementById("temperature-value").textContent =
+            savedTemperature;
+        }
+        if (savedHumidity !== null) {
+          document.getElementById("humidity-value").textContent = savedHumidity;
+        }
+        if (savedPressure !== null) {
+          document.getElementById("pressure-value").textContent = savedPressure;
+        }
+
+        const savedTemperatureData = localStorage.getItem("temperatureData");
+        const savedHumidityData = localStorage.getItem("humidityData");
+        const savedPressureData = localStorage.getItem("pressureData");
+
+        if (savedTemperatureData !== null) {
+          temperatureData = JSON.parse(savedTemperatureData);
+        }
+        if (savedHumidityData !== null) {
+          humidityData = JSON.parse(savedHumidityData);
+        }
+        if (savedPressureData !== null) {
+          pressureData = JSON.parse(savedPressureData);
+        }
+
+        // Create the charts with the saved data
+        temperatureChart = createChart(
+          temperatureChartCtx,
+          temperatureData,
+          "Temperature",
+          "rgb(192, 75, 75)"
+        );
+        humidityChart = createChart(
+          humidityChartCtx,
+          humidityData,
+          "Humidity",
+          "rgb(75, 192, 192)"
+        );
+        pressureChart = createChart(
+          pressureChartCtx,
+          pressureData,
+          "Pressure",
+          "rgb(75, 75, 192)"
+        );
+      });
+    </script>
+  </body>
+</html>
