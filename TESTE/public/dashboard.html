@@ -300,7 +300,7 @@
       });
 
       socket.on("mqttData", (data) => {
-        const { temperature, humidity, pressure } = data;
+        const { temperature, humidity, pressure, ledState } = data;
 
         // Display the data
         document.getElementById("temperature-value").textContent =
@@ -310,10 +310,18 @@
         document.getElementById("pressure-value").textContent =
           pressure.toFixed(2) + " hPa";
 
+        if (ledState) {
+          const ledStateElement = document.getElementById("ledBtnh6");
+          ledStateElement.textContent = `The LED is ${ledState}`;
+        }  
+
         // Save the data to local storage
         localStorage.setItem("temperature", temperature.toFixed(2));
         localStorage.setItem("humidity", humidity.toFixed(2));
         localStorage.setItem("pressure", pressure.toFixed(2));
+        if (ledState) {
+          localStorage.setItem("ledState", ledState);
+        }
 
         // Update the chart data arrays and save them to local storage
         temperatureData.push(temperature);

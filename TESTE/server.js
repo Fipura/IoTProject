@@ -117,12 +117,13 @@ function connectToMqttBroker(mqttBroker, mqttPort) {
       const temperature = parseFloat(parts[0]);
       const humidity = parseFloat(parts[1]);
       const pressure = parseFloat(parts[2]);
-      const ledState = parts[3];
+      const receivedLedState  = parts[3];
 
       if (!isNaN(temperature) && !isNaN(humidity) && !isNaN(pressure)) {
         lastValuetemp = temperature; // Update lastValue to temperature
         lastValuehum = humidity; // Update lastValue to temperature
         lastValuepress = pressure; // Update lastValue to temperature
+        ledState = receivedLedState;
         data.push([humidity, temperature, pressure]); // Push an array with humidity, temperature, and pressure
         console.log(
           "Temperature:",
