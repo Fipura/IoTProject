@@ -9,7 +9,7 @@ passport.use(
     {
       clientID: GOOGLE_CLIENT_ID,
       clientSecret: GOOGLE_CLIENT_SECRET,
-      callbackURL: 'http://localhost:3000/auth/google/callback',
+      callbackURL: 'https://e67c-2001-818-da5d-800-9492-68f2-9830-53e0.ngrok-free.app/auth/google/callback',
     },
     (request, accessToken, refreshToken, profile, done) => {
       return done(null, profile);
