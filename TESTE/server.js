@@ -53,7 +53,7 @@ let mqttClient;
 const MQTT_USERNAME = "Pedro";
 const MQTT_PASSWORD = "test";
 
-const WORLD_WEATHER_API_KEY = "011c301b18824f948eb184443240605";
+const WORLD_WEATHER_API_KEY = "cc662c28a9fc4fef967134528241006";
 
 async function getWeather() {
   try {
